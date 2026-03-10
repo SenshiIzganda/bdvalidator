@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="theme-color" content="#050c09"/>
+<title>BD Validator Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&family=Syne:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#050c09;
+  --surface:#0c1610;
+  --surface2:#111d15;
+  --glass:rgba(255,255,255,.03);
+  --glass2:rgba(255,255,255,.055);
+  --border:rgba(255,255,255,.08);
+  --border2:rgba(255,255,255,.14);
+  --green:#00e676;--green2:#69ffb8;--green3:#004d27;
+  --red:#ff3d57;--gold:#ffd740;--blue:#48c8ff;
+  --orange:#ff8c00;--purple:#d580ff;--teal:#00f5d4;
+  --cyan:#00e5ff;
+  --text:#e8f5ed;--sub:#5a8a6a;--muted:#2d4d36;
+  --bd-green:#006a4e;--bd-red:#f42a41;
+  --glow-g:rgba(0,230,118,.18);
+  --glow-r:rgba(255,61,87,.18);
+}
+
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;overflow-x:hidden}
+
+/* ── ANIMATED MESH BG ── */
+.mesh{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.mesh::before{
+  content:'';position:absolute;width:700px;height:700px;
+  background:radial-gradient(circle,rgba(0,106,78,.22) 0%,transparent 70%);
+  top:-200px;left:-150px;animation:drift1 18s ease-in-out infinite alternate;
+}
+.mesh::after{
+  content:'';position:absolute;width:500px;height:500px;
+  background:radial-gradient(circle,rgba(244,42,65,.1) 0%,transparent 70%);
+  bottom:-100px;right:-100px;animation:drift2 14s ease-in-out infinite alternate;
+}
+@keyframes drift1{to{transform:translate(120px,80px)}}
+@keyframes drift2{to{transform:translate(-80px,-60px)}}
+.mesh-mid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 30% at 70% 40%,rgba(0,200,118,.04),transparent),
+    radial-gradient(ellipse 40% 40% at 20% 70%,rgba(72,200,255,.04),transparent);
+}
+/* scanlines */
+.scanlines{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);
+}
+
+.wrap{position:relative;z-index:1;max-width:580px;margin:0 auto;padding:24px 16px 80px}
+
+/* ── HEADER ── */
+.hdr{text-align:center;margin-bottom:28px;padding-top:16px;position:relative}
+.hdr-flag{display:flex;justify-content:center;align-items:center;gap:0;margin-bottom:20px}
+.hdr-flag-g{
+  width:64px;height:40px;
+  background:linear-gradient(135deg,#006a4e,#009966);
+  border-radius:8px 0 0 8px;
+  box-shadow:0 0 30px rgba(0,153,102,.3);
+}
+.hdr-flag-r{
+  width:40px;height:40px;background:radial-gradient(circle at 40% 40%,#ff4444,#cc0000);
+  border-radius:50%;margin:0 -10px;z-index:1;position:relative;
+  box-shadow:0 0 24px rgba(244,42,65,.5),0 0 60px rgba(244,42,65,.2);
+  animation:pulse-r 3s ease-in-out infinite;
+}
+@keyframes pulse-r{0%,100%{box-shadow:0 0 24px rgba(244,42,65,.5),0 0 60px rgba(244,42,65,.2)}50%{box-shadow:0 0 32px rgba(244,42,65,.7),0 0 80px rgba(244,42,65,.3)}}
+.hdr-flag-g2{
+  width:64px;height:40px;
+  background:linear-gradient(135deg,#009966,#006a4e);
+  border-radius:0 8px 8px 0;
+  box-shadow:0 0 30px rgba(0,153,102,.3);
+}
+.hdr-eyebrow{font-size:10px;font-weight:600;letter-spacing:.3em;color:var(--sub);text-transform:uppercase;margin-bottom:6px}
+.hdr-title{font-family:'Syne',sans-serif;font-size:42px;font-weight:800;line-height:.95;
+  background:linear-gradient(135deg,#ffffff 0%,#69ffb8 50%,#00e676 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:4px;letter-spacing:-1px}
+.hdr-sub{font-size:12px;color:var(--sub);font-weight:500;letter-spacing:.12em;text-transform:uppercase}
+.hdr-bangla{font-family:'Tiro Bangla',serif;font-size:12px;color:var(--muted);margin-top:5px}
+/* version pill */
+.ver-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px 3px 8px;
+  border-radius:100px;background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);
+  font-size:10px;font-weight:700;color:var(--green2);letter-spacing:.06em;margin-top:10px}
+.ver-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── TABS ── */
+.tabs{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;padding:5px;margin-bottom:18px;
+  box-shadow:0 4px 24px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.tab{
+  padding:10px 4px;border:none;border-radius:13px;background:none;
+  font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;
+  color:var(--sub);cursor:pointer;transition:all .25s;text-align:center;line-height:1.3;
+  position:relative;
+}
+.tab-icon{font-size:16px;display:block;margin-bottom:2px}
+.tab.on{
+  background:linear-gradient(135deg,rgba(0,230,118,.12),rgba(0,100,60,.08));
+  border:1px solid rgba(0,230,118,.2);color:var(--green2);
+  box-shadow:0 0 16px rgba(0,230,118,.1),inset 0 1px 0 rgba(0,230,118,.1);
+}
+.tab:active{transform:scale(.94)}
+
+/* ── PAGES ── */
+.tpage{display:none;animation:pgIn .25s cubic-bezier(.4,0,.2,1)}
+.tpage.on{display:block}
+@keyframes pgIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── GLASS CARD ── */
+.card{
+  background:var(--glass);
+  backdrop-filter:blur(20px);
+  border:1px solid var(--border);
+  border-radius:20px;padding:20px;margin-bottom:14px;
+  position:relative;overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,230,118,.25),transparent);
+}
+.card-title{
+  font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--sub);margin-bottom:14px;display:flex;align-items:center;gap:6px;
+}
+.card-title::before{content:'';width:3px;height:14px;background:var(--green);border-radius:2px;display:inline-block}
+
+/* ── INPUT ── */
+.inp-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:7px;display:block}
+.inp-wrap{position:relative}
+.main-inp{
+  width:100%;background:rgba(0,0,0,.4);
+  border:1.5px solid var(--border2);border-radius:14px;
+  padding:14px 48px 14px 16px;color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;
+  letter-spacing:2.5px;outline:none;transition:all .3s;
+  caret-color:var(--green);
+}
+.main-inp:focus{border-color:rgba(0,230,118,.5);box-shadow:0 0 0 4px rgba(0,230,118,.07),0 0 20px rgba(0,230,118,.05)}
+.main-inp::placeholder{color:var(--muted);font-size:12px;letter-spacing:.5px;font-family:'Space Grotesk',sans-serif}
+.main-inp.valid{border-color:rgba(0,230,118,.5);background:rgba(0,230,118,.03)}
+.main-inp.invalid{border-color:rgba(255,61,87,.45);background:rgba(255,61,87,.03)}
+.inp-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:20px;transition:all .3s}
+.dcount{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-align:right;margin-top:5px;transition:color .3s}
+.dcount.ok{color:var(--green)}
+.tbadge{
+  display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:100px;
+  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-top:8px;
+  opacity:0;transform:translateY(5px) scale(.95);transition:all .3s cubic-bezier(.34,1.56,.64,1);
+}
+.tbadge.show{opacity:1;transform:translateY(0) scale(1)}
+.tg{background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.25);color:var(--green2)}
+.tgold{background:rgba(255,215,64,.1);border:1px solid rgba(255,215,64,.25);color:var(--gold)}
+.tb{background:rgba(72,200,255,.1);border:1px solid rgba(72,200,255,.25);color:var(--blue)}
+.tp{background:rgba(213,128,255,.1);border:1px solid rgba(213,128,255,.25);color:var(--purple)}
+.tt{background:rgba(0,245,212,.1);border:1px solid rgba(0,245,212,.25);color:var(--teal)}
+.to{background:rgba(255,140,0,.1);border:1px solid rgba(255,140,0,.25);color:var(--orange)}
+
+/* TEXT INPUT */
+.text-inp{
+  width:100%;background:rgba(0,0,0,.35);border:1.5px solid var(--border);
+  border-radius:12px;padding:11px 14px;color:var(--text);
+  font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:500;
+  outline:none;transition:all .3s;margin-top:7px;
+}
+.text-inp:focus{border-color:rgba(213,128,255,.5);box-shadow:0 0 0 3px rgba(213,128,255,.06)}
+.text-inp::placeholder{color:var(--muted)}
+
+/* ── VERIFY BUTTON ── */
+.verify-btn{
+  width:100%;padding:14px;border:none;border-radius:14px;
+  background:linear-gradient(135deg,#005a3a 0%,#008855 50%,#00aa66 100%);
+  color:#fff;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;
+  letter-spacing:.06em;cursor:pointer;transition:all .3s;margin-top:10px;
+  position:relative;overflow:hidden;
+  box-shadow:0 4px 20px rgba(0,136,85,.25);
+}
+.verify-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.08),transparent);opacity:0;transition:.3s}
+.verify-btn:hover::before{opacity:1}
+.verify-btn:hover{box-shadow:0 6px 28px rgba(0,136,85,.4);transform:translateY(-1px)}
+.verify-btn:active{transform:scale(.97) translateY(0)}
+.verify-btn:disabled{opacity:.35;cursor:not-allowed;box-shadow:none;transform:none}
+.v-blue{background:linear-gradient(135deg,#003d77,#0066bb,#0088ee);box-shadow:0 4px 20px rgba(0,102,187,.25)}
+.v-blue:hover{box-shadow:0 6px 28px rgba(0,102,187,.4)}
+.v-orange{background:linear-gradient(135deg,#7a2800,#cc5500,#ff7700);box-shadow:0 4px 20px rgba(204,85,0,.25)}
+.v-purple{background:linear-gradient(135deg,#4d0099,#8800cc,#aa00ff);box-shadow:0 4px 20px rgba(136,0,204,.25)}
+.v-teal{background:linear-gradient(135deg,#004d44,#007766,#00aa99);box-shadow:0 4px 20px rgba(0,119,102,.25)}
+.pdf-btn{
+  width:100%;padding:11px;border:none;border-radius:12px;
+  background:rgba(213,128,255,.08);border:1px solid rgba(213,128,255,.22);
+  color:var(--purple);font-family:'Space Grotesk',sans-serif;
+  font-size:13px;font-weight:700;cursor:pointer;transition:all .25s;margin-top:7px;display:none;
+}
+.pdf-btn.show{display:block}
+.pdf-btn:hover{background:rgba(213,128,255,.14)}
+
+/* ── EXAMPLES ── */
+.ex-grid{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.ex-chip{
+  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
+  padding:5px 10px;border-radius:8px;cursor:pointer;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--sub);transition:all .2s;
+}
+.ex-chip:hover{border-color:var(--green);color:var(--green2);background:rgba(0,230,118,.05)}
+.ex-chip:active{transform:scale(.93)}
+.ex-chip.bad{border-color:rgba(255,61,87,.2);color:rgba(255,100,100,.7)}
+.ex-chip.bad:hover{border-color:var(--red);color:var(--red);background:rgba(255,61,87,.05)}
+.ex-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;margin-top:11px;display:block}
+
+/* ── RESULT ── */
+.result{border-radius:18px;padding:20px;margin-top:14px;display:none;animation:rIn .45s cubic-bezier(.34,1.56,.64,1)}
+.result.show{display:block}
+@keyframes rIn{from{opacity:0;transform:scale(.9) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.result.vr{
+  background:linear-gradient(135deg,rgba(0,230,118,.07),rgba(0,100,60,.04));
+  border:1px solid rgba(0,230,118,.22);
+  box-shadow:0 0 40px rgba(0,230,118,.06),inset 0 1px 0 rgba(0,230,118,.1);
+}
+.result.ir{
+  background:linear-gradient(135deg,rgba(255,61,87,.07),rgba(150,0,0,.04));
+  border:1px solid rgba(255,61,87,.22);
+  box-shadow:0 0 40px rgba(255,61,87,.06);
+}
+.ricon{font-size:36px;margin-bottom:8px;display:block}
+.rtitle{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:12px;letter-spacing:-.3px}
+.result.vr .rtitle{color:var(--green2)}
+.result.ir .rtitle{background:linear-gradient(135deg,#ff6b6b,#ff3d57);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.igrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.ibox{
+  background:rgba(0,0,0,.3);border-radius:11px;padding:9px 12px;
+  border:1px solid rgba(255,255,255,.06);
+  transition:border-color .2s;
+}
+.ibox:hover{border-color:rgba(255,255,255,.1)}
+.ilbl{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.ival{font-size:13px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace;word-break:break-all}
+.ival.g{color:var(--green2)}.ival.b{color:var(--blue)}.ival.gold{color:var(--gold)}
+.ival.p{color:var(--purple)}.ival.t{color:var(--teal)}.ival.r{color:var(--red)}
+.csrow{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;background:rgba(0,0,0,.25);border-radius:10px;
+  margin-top:7px;border:1px solid rgba(255,255,255,.05);
+}
+.cslbl{font-size:11px;color:var(--sub);font-weight:600}
+.csval{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700}
+.csok{color:var(--green2)}.csfail{color:var(--red)}
+.errlist{list-style:none;margin-top:9px}
+.erritem{
+  display:flex;align-items:flex-start;gap:8px;padding:7px 0;
+  border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;color:rgba(255,120,120,.85);
+}
+.erritem:last-child{border-bottom:none}
+.erritem::before{content:'✕';color:var(--red);font-weight:700;flex-shrink:0;font-size:11px;margin-top:1px}
+.disc{
+  margin-top:10px;padding:8px 12px;background:rgba(0,0,0,.2);
+  border-radius:10px;border:1px solid rgba(255,255,255,.05);
+  font-size:11px;color:var(--sub);line-height:1.7;
+}
+
+/* ── DATE INPUT ── */
+.date-inp{
+  width:100%;background:rgba(0,0,0,.4);border:1.5px solid var(--border2);
+  border-radius:14px;padding:14px 16px;color:var(--text);
+  font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;
+  outline:none;transition:all .3s;cursor:pointer;
+}
+.date-inp:focus{border-color:rgba(72,200,255,.5);box-shadow:0 0 0 4px rgba(72,200,255,.06)}
+input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5) sepia(1) saturate(0)}
+
+/* ══════════════════════════
+   PHONE — FULL REDESIGN
+══════════════════════════ */
+
+/* Live operator banner */
+.op-live{
+  border-radius:16px;padding:0;margin-top:10px;
+  max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1),padding .3s,opacity .3s;
+  opacity:0;
+}
+.op-live.show{max-height:200px;padding:16px;opacity:1}
+
+/* operator-specific gradients */
+.op-gp-bg{background:linear-gradient(135deg,rgba(0,80,160,.2),rgba(0,40,100,.1));border:1px solid rgba(0,150,255,.2)}
+.op-robi-bg{background:linear-gradient(135deg,rgba(180,0,0,.2),rgba(100,0,0,.1));border:1px solid rgba(255,50,50,.2)}
+.op-airtel-bg{background:linear-gradient(135deg,rgba(200,20,20,.2),rgba(120,0,0,.1));border:1px solid rgba(255,100,50,.2)}
+.op-bl-bg{background:linear-gradient(135deg,rgba(200,80,0,.2),rgba(130,40,0,.1));border:1px solid rgba(255,150,0,.2)}
+.op-tt-bg{background:linear-gradient(135deg,rgba(0,100,60,.2),rgba(0,60,30,.1));border:1px solid rgba(0,200,120,.2)}
+
+.op-live-inner{display:flex;align-items:center;gap:14px}
+.op-live-svg{border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.4);flex-shrink:0}
+.op-live-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1}
+.op-live-tag{font-size:12px;color:rgba(255,255,255,.45);margin-top:3px;font-weight:500}
+.op-live-prefixes{display:flex;gap:5px;margin-top:8px}
+.op-prefix-chip{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+  padding:3px 9px;border-radius:7px;background:rgba(0,0,0,.3);
+  border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);
+}
+
+/* ── Operator Guide Cards (Format Guide) ── */
+.op-card{
+  border-radius:18px;padding:18px 20px;margin-bottom:12px;
+  position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;
+  cursor:default;
+}
+.op-card:last-child{margin-bottom:0}
+.op-card:hover{transform:translateY(-2px)}
+.op-card-gp{
+  background:linear-gradient(135deg,rgba(0,80,180,.18) 0%,rgba(0,40,120,.1) 100%);
+  border:1px solid rgba(0,150,255,.22);
+  box-shadow:0 4px 24px rgba(0,100,200,.1);
+}
+.op-card-robi{
+  background:linear-gradient(135deg,rgba(180,0,0,.18) 0%,rgba(100,0,0,.1) 100%);
+  border:1px solid rgba(255,50,50,.22);
+  box-shadow:0 4px 24px rgba(200,0,0,.1);
+}
+.op-card-airtel{
+  background:linear-gradient(135deg,rgba(210,30,30,.16) 0%,rgba(150,0,0,.1) 100%);
+  border:1px solid rgba(255,90,40,.22);
+  box-shadow:0 4px 24px rgba(200,40,0,.1);
+}
+.op-card-bl{
+  background:linear-gradient(135deg,rgba(200,90,0,.18) 0%,rgba(140,50,0,.1) 100%);
+  border:1px solid rgba(255,150,0,.22);
+  box-shadow:0 4px 24px rgba(200,100,0,.1);
+}
+.op-card-tt{
+  background:linear-gradient(135deg,rgba(0,120,70,.18) 0%,rgba(0,70,40,.1) 100%);
+  border:1px solid rgba(0,220,130,.22);
+  box-shadow:0 4px 24px rgba(0,150,80,.1);
+}
+.op-card-inner{display:flex;align-items:center;gap:16px}
+.op-card-logo{border-radius:16px;box-shadow:0 6px 24px rgba(0,0,0,.4);flex-shrink:0}
+.op-card-body{flex:1;min-width:0}
+.op-card-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;line-height:1;margin-bottom:3px}
+.op-card-desc{font-size:11px;color:rgba(255,255,255,.4);font-weight:500;margin-bottom:10px;line-height:1.5}
+.op-card-prefixes{display:flex;flex-wrap:wrap;gap:5px}
+.op-card-prefix{
+  font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;
+  padding:4px 11px;border-radius:8px;background:rgba(0,0,0,.3);
+  border:1px solid rgba(255,255,255,.14);
+}
+.op-card-care{text-align:right;flex-shrink:0}
+.op-care-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:2px}
+.op-care-num{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700}
+.op-card-shine{
+  position:absolute;top:-50%;right:-20%;width:200px;height:200%;
+  background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.03) 50%,transparent 60%);
+  transform:skewX(-15deg);pointer-events:none;
+}
+
+/* GP colors */
+.op-card-gp .op-card-name{color:#5bc8ff}
+.op-card-gp .op-card-prefix{border-color:rgba(0,150,255,.3);color:#5bc8ff}
+.op-card-gp .op-care-num{color:#5bc8ff}
+/* Robi */
+.op-card-robi .op-card-name{color:#ff7070}
+.op-card-robi .op-card-prefix{border-color:rgba(255,60,60,.3);color:#ff7070}
+.op-card-robi .op-care-num{color:#ff7070}
+/* Airtel */
+.op-card-airtel .op-card-name{color:#ff9060}
+.op-card-airtel .op-card-prefix{border-color:rgba(255,100,50,.3);color:#ff9060}
+.op-card-airtel .op-care-num{color:#ff9060}
+/* BL */
+.op-card-bl .op-card-name{color:#ffb840}
+.op-card-bl .op-card-prefix{border-color:rgba(255,160,0,.3);color:#ffb840}
+.op-card-bl .op-care-num{color:#ffb840}
+/* TT */
+.op-card-tt .op-card-name{color:#5df0a0}
+.op-card-tt .op-card-prefix{border-color:rgba(0,220,130,.3);color:#5df0a0}
+.op-card-tt .op-care-num{color:#5df0a0}
+
+/* formats box */
+.fmt-box{
+  background:rgba(0,0,0,.25);border:1px solid var(--border);
+  border-radius:14px;padding:14px 16px;margin-top:2px;
+}
+.fmt-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);margin-bottom:10px}
+.fmt-chips{display:flex;flex-wrap:wrap;gap:6px}
+.fmt-chip{
+  font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;
+  padding:6px 13px;border-radius:9px;background:rgba(0,245,212,.07);
+  border:1px solid rgba(0,245,212,.18);color:var(--teal);
+}
+
+/* PP TOGGLE */
+.pp-wrap{margin-bottom:14px}
+.pp-lbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:7px;display:block}
+.pp-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pp-btn{
+  padding:11px;border:1.5px solid var(--border);border-radius:12px;
+  background:rgba(0,0,0,.3);color:var(--muted);
+  font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;transition:all .25s;text-align:center;
+}
+.pp-btn:active{transform:scale(.96)}
+.pp-pre.on{border-color:rgba(0,230,118,.45);background:rgba(0,230,118,.08);color:var(--green2);box-shadow:0 0 16px rgba(0,230,118,.1)}
+.pp-post.on{border-color:rgba(72,200,255,.45);background:rgba(72,200,255,.08);color:var(--blue);box-shadow:0 0 16px rgba(72,200,255,.1)}
+
+/* USSD table */
+.ussd-tbl{width:100%;border-collapse:collapse}
+.ussd-tbl th{
+  font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);
+}
+.ussd-tbl td{font-size:12px;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--text)}
+.ussd-tbl tr:last-child td{border-bottom:none}
+.ussd-tbl tr:hover td{background:rgba(255,255,255,.02)}
+.ussd-code{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+  padding:3px 9px;border-radius:7px;background:rgba(0,0,0,.35);
+  border:1px solid rgba(255,255,255,.1);display:inline-block;
+  cursor:pointer;transition:all .18s;color:var(--teal);
+}
+.ussd-code:hover{border-color:var(--teal);background:rgba(0,245,212,.08);transform:scale(1.04)}
+.ussd-code:active{transform:scale(.96)}
+
+/* care cards */
+.info-strip{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.info-strip-item{
+  background:rgba(0,0,0,.25);border-radius:10px;padding:9px 12px;
+  border:1px solid rgba(255,255,255,.05);
+}
+.is-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.is-val{font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--teal)}
+
+/* TIN preview */
+.tin-prev-wrap{
+  background:linear-gradient(135deg,rgba(213,128,255,.07),rgba(0,106,78,.05));
+  border:1px solid rgba(213,128,255,.18);border-radius:18px;padding:18px;
+  margin-top:12px;display:none;
+}
+.tin-prev-wrap.show{display:block;animation:pgIn .3s ease}
+.tin-cert{background:#fff;border-radius:12px;padding:16px;color:#1a1a1a;box-shadow:0 12px 40px rgba(0,0,0,.5);font-family:'Space Grotesk',sans-serif}
+.tc-top{background:#006a4e;color:white;margin:-16px -16px 12px;padding:12px 16px;border-radius:12px 12px 0 0;text-align:center}
+.tc-num{font-size:22px;font-weight:700;text-align:center;color:#006a4e;letter-spacing:4px;margin:9px 0;padding:8px;background:#f0fff4;border-radius:7px;border:2px solid #006a4e;font-family:'JetBrains Mono',monospace}
+.tc-f{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:11px}
+.tc-f:last-child{border-bottom:none}
+.tc-fl{color:#888;font-size:9px;text-transform:uppercase;letter-spacing:.06em}
+.tc-fv{font-weight:700;color:#222}
+.tc-bot{background:#f42a41;color:white;margin:12px -16px -16px;padding:7px 16px;border-radius:0 0 12px 12px;font-size:8px;text-align:center}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:linear-gradient(135deg,var(--green),#00aa55);color:#000;
+  padding:9px 20px;border-radius:100px;font-weight:700;font-size:13px;
+  opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);z-index:9999;pointer-events:none;
+  box-shadow:0 8px 24px rgba(0,200,80,.3);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* FMT GUIDE ROWS (NID/BIN/etc) */
+.frow{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.frow:last-child{border-bottom:none}
+.fbadge{padding:3px 8px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;flex-shrink:0;letter-spacing:.05em}
+.fb-g{background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.22);color:var(--green2)}
+.fb-gold{background:rgba(255,215,64,.1);border:1px solid rgba(255,215,64,.22);color:var(--gold)}
+.fb-b{background:rgba(72,200,255,.1);border:1px solid rgba(72,200,255,.22);color:var(--blue)}
+.fb-p{background:rgba(213,128,255,.1);border:1px solid rgba(213,128,255,.22);color:var(--purple)}
+.ft{font-size:13px;font-weight:700;color:var(--text)}
+.fd{font-size:11px;color:var(--sub);margin-top:2px;line-height:1.5}
+.fe{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px}
+
+.footer{text-align:center;margin-top:32px;font-size:11px;color:var(--muted);line-height:2}
+.footer a{color:var(--sub);text-decoration:none}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinning::after{content:' ⟳';display:inline-block;animation:spin .6s linear infinite}
+</style>
+</head>
+<body>
+
+<!-- BG layers -->
+<div class="mesh"></div>
+<div class="mesh-mid"></div>
+<div class="scanlines"></div>
+
+<div class="wrap">
+
+<!-- ══ HEADER ══ -->
+<div class="hdr">
+  <div class="hdr-flag">
+    <div class="hdr-flag-g"></div>
+    <div class="hdr-flag-r"></div>
+    <div class="hdr-flag-g2"></div>
+  </div>
+  <div class="hdr-eyebrow">Bangladesh · বাংলাদেশ</div>
+  <div class="hdr-title">BD VALIDATOR</div>
+  <div class="hdr-sub">NID · BIN · DOB · TIN · Phone</div>
+  <div class="hdr-bangla">সব ধরনের বাংলাদেশ নম্বর যাচাইকারী</div>
+  <div><span class="ver-pill"><span class="ver-dot"></span>v4.0 · LIVE</span></div>
+</div>
+
+<!-- ══ TABS ══ -->
+<div class="tabs">
+  <button class="tab on" id="tab-nid" onclick="sw('nid')"><span class="tab-icon">🪪</span>NID</button>
+  <button class="tab" id="tab-bin" onclick="sw('bin')"><span class="tab-icon">🏢</span>BIN</button>
+  <button class="tab" id="tab-dob" onclick="sw('dob')"><span class="tab-icon">🎂</span>DOB</button>
+  <button class="tab" id="tab-tin" onclick="sw('tin')"><span class="tab-icon">💳</span>TIN</button>
+  <button class="tab" id="tab-ph"  onclick="sw('ph')"><span class="tab-icon">📱</span>Phone</button>
+</div>
+
+<!-- ══ NID ══ -->
+<div class="tpage on" id="pg-nid">
+  <div class="card">
+    <div class="card-title">National ID Number</div>
+    <label class="inp-label">Enter NID · জাতীয় পরিচয়পত্র নম্বর</label>
+    <div class="inp-wrap"><input class="main-inp" id="nid-i" type="tel" inputmode="numeric" maxlength="17" placeholder="10, 13 or 17 digits…" oninput="oNID(this)"/><span class="inp-icon">🪪</span></div>
+    <div class="dcount" id="nid-dc">—</div>
+    <div class="tbadge" id="nid-tb"></div>
+    <span class="ex-lbl">✅ Valid examples</span>
+    <div class="ex-grid">
+      <div class="ex-chip" onclick="sV('nid','19901215301200123456')">1990 · Dhaka</div>
+      <div class="ex-chip" onclick="sV('nid','19851020440100456789')">1985 · Ctg</div>
+      <div class="ex-chip" onclick="sV('nid','2000010630')">10-digit</div>
+      <div class="ex-chip" onclick="sV('nid','1234567890123')">13-digit</div>
+      <div class="ex-chip" onclick="sV('nid','19951231121200654321')">1995 · Raj</div>
+    </div>
+    <span class="ex-lbl">❌ Invalid examples</span>
+    <div class="ex-grid">
+      <div class="ex-chip bad" onclick="sV('nid','12345')">Too short</div>
+      <div class="ex-chip bad" onclick="sV('nid','00000000000000000')">All zeros</div>
+      <div class="ex-chip bad" onclick="sV('nid','30001215301200123456')">Year 3000</div>
+      <div class="ex-chip bad" onclick="sV('nid','19901299991200123456')">Bad district</div>
+    </div>
+    <button class="verify-btn" id="nid-btn" onclick="vNID()" disabled>Verify NID →</button>
+  </div>
+  <div class="result" id="nid-res"></div>
+  <div class="card">
+    <div class="card-title">Format Guide</div>
+    <div class="frow"><div class="fbadge fb-g">17-digit</div><div><div class="ft">Smart NID (New)</div><div class="fd">জন্মসাল(4) + জেলা(2) + উপজেলা(2) + ব্লক(2) + ক্রমিক(6) + চেক(1)</div><div class="fe">YYYY·DD·UU·BB·SSSSSS·C</div></div></div>
+    <div class="frow"><div class="fbadge fb-gold">13-digit</div><div><div class="ft">Old NID Card</div><div class="fd">পুরনো ১৩ সংখ্যার পরিচয়পত্র</div></div></div>
+    <div class="frow"><div class="fbadge fb-gold">10-digit</div><div><div class="ft">Voter ID Legacy</div><div class="fd">পুরনো ভোটার আইডি</div></div></div>
+  </div>
+</div>
+
+<!-- ══ BIN ══ -->
+<div class="tpage" id="pg-bin">
+  <div class="card">
+    <div class="card-title">Business ID Number</div>
+    <label class="inp-label">Enter BIN · ব্যবসা শনাক্তকরণ নম্বর</label>
+    <div class="inp-wrap"><input class="main-inp" id="bin-i" type="tel" inputmode="numeric" maxlength="9" placeholder="9-digit BIN…" oninput="oBIN(this)"/><span class="inp-icon">🏢</span></div>
+    <div class="dcount" id="bin-dc">—</div>
+    <div class="tbadge" id="bin-tb"></div>
+    <span class="ex-lbl">✅ Valid examples</span>
+    <div class="ex-grid">
+      <div class="ex-chip" onclick="sV('bin','000031429')">Dhaka</div>
+      <div class="ex-chip" onclick="sV('bin','000221892')">Chittagong</div>
+      <div class="ex-chip" onclick="sV('bin','000334567')">Rajshahi</div>
+      <div class="ex-chip" onclick="sV('bin','000445678')">Khulna</div>
+      <div class="ex-chip" onclick="sV('bin','000556789')">Barishal</div>
+      <div class="ex-chip" onclick="sV('bin','000667890')">Sylhet</div>
+    </div>
+    <span class="ex-lbl">❌ Invalid examples</span>
+    <div class="ex-grid">
+      <div class="ex-chip bad" onclick="sV('bin','12345')">Short</div>
+      <div class="ex-chip bad" onclick="sV('bin','000000000')">All zeros</div>
+      <div class="ex-chip bad" onclick="sV('bin','999999999')">Bad prefix</div>
+    </div>
+    <button class="verify-btn v-blue" id="bin-btn" onclick="vBIN()" disabled>Verify BIN →</button>
+  </div>
+  <div class="result" id="bin-res"></div>
+  <div class="card">
+    <div class="card-title">Format Guide</div>
+    <div class="frow"><div class="fbadge fb-b">9-digit</div><div><div class="ft">Business Identification Number (NBR)</div><div class="fd">Division(4) + Serial(5) · Issued by National Board of Revenue</div><div class="fe">0001=Dhaka · 0002=Ctg · 0003=Raj · 0004=Khu · 0005=Bar · 0006=Syl · 0007=Rng · 0008=Mym</div></div></div>
+  </div>
+</div>
+
+<!-- ══ DOB ══ -->
+<div class="tpage" id="pg-dob">
+  <div class="card">
+    <div class="card-title">Date of Birth Validator</div>
+    <label class="inp-label">Select Date · জন্ম তারিখ বেছে নিন</label>
+    <input class="date-inp" id="dob-i" type="date" onchange="oDOB(this)"/>
+    <div class="tbadge" id="dob-tb" style="margin-top:8px"></div>
+    <span class="ex-lbl">✅ Valid examples</span>
+    <div class="ex-grid">
+      <div class="ex-chip" onclick="sDOB('1990-06-15')">1990-06-15</div>
+      <div class="ex-chip" onclick="sDOB('2000-01-01')">2000-01-01</div>
+      <div class="ex-chip" onclick="sDOB('1985-12-31')">1985-12-31</div>
+      <div class="ex-chip" onclick="sDOB('1975-03-26')">1975-03-26 🇧🇩</div>
+      <div class="ex-chip" onclick="sDOB('1952-02-21')">1952-02-21 📅</div>
+    </div>
+    <span class="ex-lbl">❌ Invalid examples</span>
+    <div class="ex-grid">
+      <div class="ex-chip bad" onclick="sDOB('2028-01-01')">Future date</div>
+      <div class="ex-chip bad" onclick="sDOB('1849-01-01')">Before 1900</div>
+      <div class="ex-chip bad" onclick="sDOB('2022-06-15')">Under 4 yrs</div>
+    </div>
+    <button class="verify-btn v-orange" id="dob-btn" onclick="vDOB()" disabled>Verify DOB →</button>
+  </div>
+  <div class="result" id="dob-res"></div>
+</div>
+
+<!-- ══ TIN ══ -->
+<div class="tpage" id="pg-tin">
+  <div class="card">
+    <div class="card-title">Tax Identification Number</div>
+    <label class="inp-label">Enter TIN · কর শনাক্তকরণ নম্বর</label>
+    <div class="inp-wrap"><input class="main-inp" id="tin-i" type="tel" inputmode="numeric" maxlength="12" placeholder="12-digit TIN…" oninput="oTIN(this)"/><span class="inp-icon">💳</span></div>
+    <div class="dcount" id="tin-dc">—</div>
+    <div class="tbadge" id="tin-tb"></div>
+    <div style="margin-top:13px;padding-top:13px;border-top:1px solid var(--border)">
+      <label class="inp-label" style="margin-bottom:0">PDF Certificate Info <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input class="text-inp" id="tin-name" type="text" placeholder="Your full name…" maxlength="60"/>
+      <input class="text-inp" id="tin-addr" type="text" placeholder="Your address…" maxlength="80"/>
+    </div>
+    <span class="ex-lbl">✅ Valid examples</span>
+    <div class="ex-grid">
+      <div class="ex-chip" onclick="sV('tin','123456789012')">Sample 1</div>
+      <div class="ex-chip" onclick="sV('tin','987654321098')">Sample 2</div>
+      <div class="ex-chip" onclick="sV('tin','246813579024')">Sample 3</div>
+      <div class="ex-chip" onclick="sV('tin','135792468013')">Sample 4</div>
+    </div>
+    <span class="ex-lbl">❌ Invalid examples</span>
+    <div class="ex-grid">
+      <div class="ex-chip bad" onclick="sV('tin','12345')">Short</div>
+      <div class="ex-chip bad" onclick="sV('tin','000000000000')">All zeros</div>
+      <div class="ex-chip bad" onclick="sV('tin','111111111111')">All same</div>
+    </div>
+    <button class="verify-btn v-purple" id="tin-btn" onclick="vTIN()" disabled>Verify TIN →</button>
+    <button class="pdf-btn" id="tin-pdf-btn" onclick="genPDF()">📄 Generate TIN Certificate PDF</button>
+  </div>
+  <div class="result" id="tin-res"></div>
+  <div class="tin-prev-wrap" id="tin-prev"><div class="card-title" style="margin-bottom:10px">Certificate Preview</div><div class="tin-cert" id="tin-cert-html"></div><div style="margin-top:8px;font-size:10px;color:var(--muted);text-align:center">⚠️ Format demo only — Not an official document</div></div>
+  <div class="card">
+    <div class="card-title">TIN Format Guide</div>
+    <div class="frow"><div class="fbadge fb-p">12-digit</div><div><div class="ft">Tax Identification Number</div><div class="fd">Circle(3) + Group(2) + Serial(6) + Check(1) · Issued by NBR Bangladesh</div><div class="fe">Required for: tax returns · business reg · property · import/export</div><div class="fe" style="margin-top:3px;color:var(--purple)">Official: secure.incometax.gov.bd</div></div></div>
+  </div>
+</div>
+
+<!-- ══ PHONE ══ -->
+<div class="tpage" id="pg-ph">
+  <div class="card">
+    <div class="card-title">Mobile Number Validator</div>
+    <label class="inp-label">Enter Phone · মোবাইল নম্বর লিখুন</label>
+    <div class="inp-wrap">
+      <input class="main-inp" id="ph-i" type="tel" inputmode="tel" maxlength="14"
+        placeholder="01XXXXXXXXX or +8801X…" oninput="oPH(this)"/>
+      <span class="inp-icon" id="ph-ic">📱</span>
+    </div>
+    <div class="dcount" id="ph-dc">—</div>
+    <div class="tbadge" id="ph-tb"></div>
+    <!-- Live operator preview -->
+    <div class="op-live" id="op-live"></div>
+    <span class="ex-lbl">✅ Valid examples</span>
+    <div class="ex-grid">
+      <div class="ex-chip" onclick="sPH('01712345678')">GP 017</div>
+      <div class="ex-chip" onclick="sPH('01312345678')">GP 013</div>
+      <div class="ex-chip" onclick="sPH('01812345678')">Robi 018</div>
+      <div class="ex-chip" onclick="sPH('01612345678')">Airtel 016</div>
+      <div class="ex-chip" onclick="sPH('01912345678')">BL 019</div>
+      <div class="ex-chip" onclick="sPH('01412345678')">BL 014</div>
+      <div class="ex-chip" onclick="sPH('01512345678')">Teletalk 015</div>
+      <div class="ex-chip" onclick="sPH('+8801712345678')">+880 format</div>
+    </div>
+    <span class="ex-lbl">❌ Invalid examples</span>
+    <div class="ex-grid">
+      <div class="ex-chip bad" onclick="sPH('01234567890')">012 bad</div>
+      <div class="ex-chip bad" onclick="sPH('0171234')">Too short</div>
+      <div class="ex-chip bad" onclick="sPH('02012345678')">020 bad</div>
+    </div>
+    <button class="verify-btn v-teal" id="ph-btn" onclick="vPH()" disabled>Identify Operator →</button>
+  </div>
+  <div class="result" id="ph-res"></div>
+
+  <!-- OPERATOR DETAIL CARD -->
+  <div class="card" id="op-detail" style="display:none">
+    <div class="card-title" id="op-detail-title">Operator Details</div>
+    <div class="pp-wrap">
+      <span class="pp-lbl">Select Plan Type</span>
+      <div class="pp-toggle">
+        <button class="pp-btn pp-pre on" id="pp-pre" onclick="setPP('pre')">📲 Prepaid</button>
+        <button class="pp-btn pp-post" id="pp-post" onclick="setPP('post')">📋 Postpaid</button>
+      </div>
+    </div>
+    <div id="ussd-area"></div>
+    <div id="care-area" style="margin-top:10px"></div>
+  </div>
+
+  <!-- OPERATOR FORMAT GUIDE -->
+  <div class="card" style="padding:20px">
+    <div class="card-title">BD Mobile Operators</div>
+
+    <!-- GP -->
+    <div class="op-card op-card-gp">
+      <div class="op-card-shine"></div>
+      <div class="op-card-inner">
+        <svg class="op-card-logo" width="64" height="64" viewBox="0 0 64 64">
+          <rect width="64" height="64" rx="16" fill="url(#gp-grad)"/>
+          <defs><linearGradient id="gp-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0070cc"/><stop offset="100%" stop-color="#003d77"/></linearGradient></defs>
+          <text x="32" y="24" font-family="Arial Black" font-weight="900" font-size="11" fill="white" text-anchor="middle" letter-spacing=".5">GRAMEEN</text>
+          <text x="32" y="38" font-family="Arial Black" font-weight="900" font-size="11" fill="white" text-anchor="middle" letter-spacing=".5">PHONE</text>
+          <path d="M20 50 Q32 42 44 50" stroke="#00d4ff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M15 55 Q32 44 49 55" stroke="#40a9ff" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".5"/>
+        </svg>
+        <div class="op-card-body">
+          <div class="op-card-name">Grameenphone</div>
+          <div class="op-card-desc">Largest operator in BD · Telenor Group<br/>80M+ subscribers</div>
+          <div class="op-card-prefixes">
+            <span class="op-card-prefix">017X</span>
+            <span class="op-card-prefix">013X</span>
+          </div>
+        </div>
+        <div class="op-card-care">
+          <div class="op-care-lbl">Care</div>
+          <div class="op-care-num">121</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Robi -->
+    <div class="op-card op-card-robi">
+      <div class="op-card-shine"></div>
+      <div class="op-card-inner">
+        <svg class="op-card-logo" width="64" height="64" viewBox="0 0 64 64">
+          <rect width="64" height="64" rx="16" fill="url(#robi-grad)"/>
+          <defs><linearGradient id="robi-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#cc0000"/><stop offset="100%" stop-color="#880000"/></linearGradient></defs>
+          <text x="32" y="28" font-family="Arial Black" font-weight="900" font-size="18" fill="white" text-anchor="middle" letter-spacing="1">robi</text>
+          <text x="32" y="41" font-family="Arial" font-weight="400" font-size="9" fill="rgba(255,255,255,.65)" text-anchor="middle" letter-spacing="2.5">AXIATA</text>
+          <circle cx="32" cy="52" r="4" fill="#FF4444"/>
+        </svg>
+        <div class="op-card-body">
+          <div class="op-card-name">Robi Axiata</div>
+          <div class="op-card-desc">2nd largest in BD · Axiata Group<br/>Merged with Airtel in 2016</div>
+          <div class="op-card-prefixes">
+            <span class="op-card-prefix">018X</span>
+          </div>
+        </div>
+        <div class="op-card-care">
+          <div class="op-care-lbl">Care</div>
+          <div class="op-care-num">123</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Airtel -->
+    <div class="op-card op-card-airtel">
+      <div class="op-card-shine"></div>
+      <div class="op-card-inner">
+        <svg class="op-card-logo" width="64" height="64" viewBox="0 0 64 64">
+          <rect width="64" height="64" rx="16" fill="url(#air-grad)"/>
+          <defs><linearGradient id="air-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e01010"/><stop offset="100%" stop-color="#a00000"/></linearGradient></defs>
+          <path d="M14 44 Q22 18 32 28 Q42 38 50 14" stroke="white" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="32" y="58" font-family="Arial Black" font-weight="900" font-size="10" fill="white" text-anchor="middle" letter-spacing="1">airtel</text>
+        </svg>
+        <div class="op-card-body">
+          <div class="op-card-name">Airtel Bangladesh</div>
+          <div class="op-card-desc">Now runs on Robi infrastructure<br/>Airtel brand, Robi network</div>
+          <div class="op-card-prefixes">
+            <span class="op-card-prefix">016X</span>
+          </div>
+        </div>
+        <div class="op-card-care">
+          <div class="op-care-lbl">Care</div>
+          <div class="op-care-num">786</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Banglalink -->
+    <div class="op-card op-card-bl">
+      <div class="op-card-shine"></div>
+      <div class="op-card-inner">
+        <svg class="op-card-logo" width="64" height="64" viewBox="0 0 64 64">
+          <rect width="64" height="64" rx="16" fill="url(#bl-grad)"/>
+          <defs><linearGradient id="bl-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ee5500"/><stop offset="100%" stop-color="#aa3300"/></linearGradient></defs>
+          <path d="M10 32 Q18 18 26 32 Q34 46 42 32 Q50 18 58 32" stroke="white" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+          <text x="32" y="54" font-family="Arial Black" font-weight="900" font-size="8.5" fill="rgba(255,255,255,.85)" text-anchor="middle" letter-spacing=".3">banglalink</text>
+        </svg>
+        <div class="op-card-body">
+          <div class="op-card-name">Banglalink</div>
+          <div class="op-card-desc">3rd largest · VEON Group<br/>Strong rural coverage</div>
+          <div class="op-card-prefixes">
+            <span class="op-card-prefix">019X</span>
+            <span class="op-card-prefix">014X</span>
+          </div>
+        </div>
+        <div class="op-card-care">
+          <div class="op-care-lbl">Care</div>
+          <div class="op-care-num">121</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Teletalk -->
+    <div class="op-card op-card-tt">
+      <div class="op-card-shine"></div>
+      <div class="op-card-inner">
+        <svg class="op-card-logo" width="64" height="64" viewBox="0 0 64 64">
+          <rect width="64" height="64" rx="16" fill="url(#tt-grad)"/>
+          <defs><linearGradient id="tt-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#006a4e"/><stop offset="100%" stop-color="#003d2c"/></linearGradient></defs>
+          <circle cx="32" cy="28" r="14" fill="#f42a41"/>
+          <text x="32" y="33" font-family="Arial Black" font-weight="900" font-size="9" fill="white" text-anchor="middle">TT</text>
+          <text x="32" y="54" font-family="Arial" font-weight="700" font-size="8.5" fill="rgba(255,255,255,.75)" text-anchor="middle" letter-spacing=".5">teletalk</text>
+        </svg>
+        <div class="op-card-body">
+          <div class="op-card-name">Teletalk BD</div>
+          <div class="op-card-desc">🏛️ State-owned · Govt of Bangladesh<br/>Official national operator</div>
+          <div class="op-card-prefixes">
+            <span class="op-card-prefix">015X</span>
+          </div>
+        </div>
+        <div class="op-card-care">
+          <div class="op-care-lbl">Care</div>
+          <div class="op-care-num">121</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accepted formats -->
+    <div class="fmt-box">
+      <div class="fmt-title">Accepted Input Formats</div>
+      <div class="fmt-chips">
+        <span class="fmt-chip">01XXXXXXXXX</span>
+        <span class="fmt-chip">+8801XXXXXXXXX</span>
+        <span class="fmt-chip">8801XXXXXXXXX</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end phone page -->
+
+<div class="footer">
+  ⚠️ Format validation only · Not a govt service<br/>
+  <a href="https://nid.gov.bd" target="_blank">nid.gov.bd</a> · <a href="https://nbr.gov.bd" target="_blank">nbr.gov.bd</a> · <a href="https://secure.incometax.gov.bd" target="_blank">incometax.gov.bd</a><br/>
+  Made with 🇧🇩 by <strong style="color:var(--sub)">Saif Mashrur</strong> — v4.0
+</div>
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+// ══ STATIC DATA ══
+const DIST={'01':'Panchagarh','02':'Thakurgaon','03':'Dinajpur','04':'Nilphamari','05':'Lalmonirhat','06':'Rangpur','07':'Kurigram','08':'Gaibandha','09':'Joypurhat','10':'Chapainawabganj','11':'Naogaon','12':'Rajshahi','13':'Natore','14':'Sirajganj','15':'Pabna','16':'Bogra','17':'Sherpur','18':'Mymensingh','19':'Jamalpur','20':'Netrokona','21':'Sylhet','22':'Moulvibazar','23':'Habiganj','24':'Sunamganj','25':'Kishoreganj','26':'Narsingdi','27':'Gazipur','28':'Tangail','29':'Manikganj','30':'Dhaka','31':'Munshiganj','32':'Narayanganj','33':'Faridpur','34':'Rajbari','35':'Madaripur','36':'Shariatpur','37':'Gopalganj','38':'Brahmanbaria','39':'Comilla','40':'Chandpur','41':'Lakshmipur','42':'Noakhali','43':'Feni','44':'Chittagong','45':"Cox's Bazar",'46':'Khagrachhari','47':'Rangamati','48':'Bandarban','49':'Jessore','50':'Satkhira','51':'Khulna','52':'Bagerhat','53':'Narail','54':'Magura','55':'Jhenaidah','56':'Kushtia','57':'Chuadanga','58':'Meherpur','59':'Barisal','60':'Bhola','61':'Patuakhali','62':'Barguna','63':'Pirojpur','64':'Jhalokati'};
+const BDIV={'0001':'Dhaka','0002':'Chittagong','0003':'Rajshahi','0004':'Khulna','0005':'Barishal','0006':'Sylhet','0007':'Rangpur','0008':'Mymensingh'};
+const ZOD=[{s:'Capricorn',e:[1,19]},{s:'Aquarius',e:[2,18]},{s:'Pisces',e:[3,20]},{s:'Aries',e:[4,19]},{s:'Taurus',e:[5,20]},{s:'Gemini',e:[6,20]},{s:'Cancer',e:[7,22]},{s:'Leo',e:[8,22]},{s:'Virgo',e:[9,22]},{s:'Libra',e:[10,22]},{s:'Scorpio',e:[11,21]},{s:'Sagittarius',e:[12,31]}];
+const BSP={'03-26':'🇧🇩 Independence Day!','12-16':'🇧🇩 Victory Day!','02-21':'🌹 Mother Language Day','04-14':'🎉 Pohela Boishakh','03-07':'📢 7th March Speech','08-15':'🖤 National Mourning Day'};
+
+const OPS={
+  GP:{name:'Grameenphone',short:'GP',color:'#5bc8ff',tagline:'Largest operator · Telenor Group',
+    prefixes:['017','013'],care:'121',web:'grameenphone.com',
+    bg:'op-gp-bg',svgKey:'GP',
+    prepaid:{extra:[
+      {l:'Check Balance',c:'*566#'},{l:'Buy Internet',c:'*121*1*2#'},{l:'Buy Minutes',c:'*121*1*1#'},
+      {l:'Buy SMS',c:'*121*1*3#'},{l:'Check Validity',c:'*566*10#'},{l:'Emergency Balance',c:'*1010*1#'},
+      {l:'All Packages',c:'*121#'},{l:'Check Number',c:'*2#'},{l:'Balance Transfer',c:'*121*2*1#'},
+    ]},
+    postpaid:{extra:[
+      {l:'Check Bill',c:'*566#'},{l:'Buy Internet',c:'*121*1*2#'},{l:'Buy Minutes',c:'*121*1*1#'},
+      {l:'Check Due',c:'*566*2#'},{l:'All Packages',c:'*121#'},{l:'Check Number',c:'*2#'},
+    ]}
+  },
+  ROBI:{name:'Robi Axiata',short:'Robi',color:'#ff7070',tagline:'2nd largest · Axiata Group',
+    prefixes:['018'],care:'123',web:'robi.com.bd',
+    bg:'op-robi-bg',svgKey:'ROBI',
+    prepaid:{extra:[
+      {l:'Check Balance',c:'*222#'},{l:'Buy Internet',c:'*8444*88#'},{l:'Buy Minutes',c:'*8444*3#'},
+      {l:'Buy SMS',c:'*8444*5#'},{l:'Check Validity',c:'*222*2#'},{l:'Emergency Loan',c:'*8811*1#'},
+      {l:'All Offers',c:'*8444#'},{l:'Check Number',c:'*140*2*4#'},{l:'Data Balance',c:'*8444*88*0#'},
+    ]},
+    postpaid:{extra:[
+      {l:'Check Bill',c:'*222#'},{l:'Buy Internet',c:'*8444*88#'},{l:'Buy Minutes',c:'*8444*3#'},
+      {l:'Check Due',c:'*222*3#'},{l:'All Packages',c:'*8444#'},{l:'Check Number',c:'*140*2*4#'},
+    ]}
+  },
+  AIRTEL:{name:'Airtel Bangladesh',short:'Airtel',color:'#ff9060',tagline:'Runs on Robi network',
+    prefixes:['016'],care:'786',web:'robi.com.bd',
+    bg:'op-airtel-bg',svgKey:'AIRTEL',
+    prepaid:{extra:[
+      {l:'Check Balance',c:'*778#'},{l:'Buy Internet',c:'*8444*88#'},{l:'Buy Minutes',c:'*8444*3#'},
+      {l:'Check Validity',c:'*778*2#'},{l:'Emergency Loan',c:'*141#'},
+      {l:'All Offers',c:'*8444#'},{l:'Check Number',c:'*121*6*3#'},{l:'Data Balance',c:'*778*4#'},
+    ]},
+    postpaid:{extra:[
+      {l:'Check Bill',c:'*778#'},{l:'Buy Internet',c:'*8444*88#'},
+      {l:'Check Due',c:'*778*2#'},{l:'All Packages',c:'*8444#'},{l:'Check Number',c:'*121*6*3#'},
+    ]}
+  },
+  BL:{name:'Banglalink',short:'BL',color:'#ffb840',tagline:'3rd largest · VEON Group',
+    prefixes:['019','014'],care:'121',web:'banglalink.net',
+    bg:'op-bl-bg',svgKey:'BL',
+    prepaid:{extra:[
+      {l:'Check Balance',c:'*124#'},{l:'Buy Internet',c:'*5000*500#'},{l:'Buy Minutes',c:'*5000*3#'},
+      {l:'Buy SMS',c:'*5000*5#'},{l:'Check Validity',c:'*124*4#'},{l:'Emergency Loan',c:'*874#'},
+      {l:'All Offers',c:'*5000#'},{l:'Check Number',c:'*511#'},{l:'Data Balance',c:'*124*5#'},
+    ]},
+    postpaid:{extra:[
+      {l:'Check Bill',c:'*124#'},{l:'Buy Internet',c:'*5000*500#'},{l:'Buy Minutes',c:'*5000*3#'},
+      {l:'Check Due',c:'*124*2#'},{l:'All Packages',c:'*5000#'},{l:'Check Number',c:'*511#'},
+    ]}
+  },
+  TT:{name:'Teletalk BD',short:'TT',color:'#5df0a0',tagline:'State-owned · Govt of Bangladesh',
+    prefixes:['015'],care:'121',web:'teletalk.com.bd',
+    bg:'op-tt-bg',svgKey:'TT',
+    prepaid:{extra:[
+      {l:'Check Balance',c:'*152#'},{l:'Buy Internet',c:'*111*12#'},{l:'Buy Minutes',c:'*111*3#'},
+      {l:'Check Validity',c:'*152*2#'},{l:'Emergency Balance',c:'*1122#'},
+      {l:'All Offers',c:'*111#'},{l:'Check Number',c:'*551#'},{l:'Data Balance',c:'*152*4#'},
+    ]},
+    postpaid:{extra:[
+      {l:'Check Bill',c:'*152#'},{l:'Buy Internet',c:'*111*12#'},
+      {l:'Check Due',c:'*152*3#'},{l:'All Packages',c:'*111#'},{l:'Check Number',c:'*551#'},
+    ]}
+  }
+};
+
+// Inline SVGs for live banner
+const SVGS={
+  GP:`<svg width="52" height="52" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="url(#gp-g2)"/><defs><linearGradient id="gp-g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0070cc"/><stop offset="100%" stop-color="#003d77"/></linearGradient></defs><text x="32" y="24" font-family="Arial Black" font-weight="900" font-size="11" fill="white" text-anchor="middle">GRAMEEN</text><text x="32" y="38" font-family="Arial Black" font-weight="900" font-size="11" fill="white" text-anchor="middle">PHONE</text><path d="M20 50 Q32 42 44 50" stroke="#00d4ff" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`,
+  ROBI:`<svg width="52" height="52" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="url(#r-g2)"/><defs><linearGradient id="r-g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#cc0000"/><stop offset="100%" stop-color="#880000"/></linearGradient></defs><text x="32" y="28" font-family="Arial Black" font-weight="900" font-size="18" fill="white" text-anchor="middle" letter-spacing="1">robi</text><text x="32" y="41" font-family="Arial" font-size="9" fill="rgba(255,255,255,.65)" text-anchor="middle" letter-spacing="2.5">AXIATA</text><circle cx="32" cy="52" r="4" fill="#FF4444"/></svg>`,
+  AIRTEL:`<svg width="52" height="52" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="url(#a-g2)"/><defs><linearGradient id="a-g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e01010"/><stop offset="100%" stop-color="#a00000"/></linearGradient></defs><path d="M14 44 Q22 18 32 28 Q42 38 50 14" stroke="white" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="32" y="58" font-family="Arial Black" font-weight="900" font-size="10" fill="white" text-anchor="middle" letter-spacing="1">airtel</text></svg>`,
+  BL:`<svg width="52" height="52" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="url(#bl-g2)"/><defs><linearGradient id="bl-g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ee5500"/><stop offset="100%" stop-color="#aa3300"/></linearGradient></defs><path d="M10 32 Q18 18 26 32 Q34 46 42 32 Q50 18 58 32" stroke="white" stroke-width="4.5" fill="none" stroke-linecap="round"/><text x="32" y="54" font-family="Arial Black" font-weight="900" font-size="8.5" fill="rgba(255,255,255,.85)" text-anchor="middle">banglalink</text></svg>`,
+  TT:`<svg width="52" height="52" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="url(#tt-g2)"/><defs><linearGradient id="tt-g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#006a4e"/><stop offset="100%" stop-color="#003d2c"/></linearGradient></defs><circle cx="32" cy="28" r="14" fill="#f42a41"/><text x="32" y="33" font-family="Arial Black" font-weight="900" font-size="9" fill="white" text-anchor="middle">TT</text><text x="32" y="54" font-family="Arial" font-weight="700" font-size="8.5" fill="rgba(255,255,255,.75)" text-anchor="middle">teletalk</text></svg>`,
+};
+
+const PMAP={'017':'GP','013':'GP','018':'ROBI','016':'AIRTEL','019':'BL','014':'BL','015':'TT'};
+let curOp=null,curPP='pre',lTIN='',lTINI={};
+
+// ══ UTILS ══
+function sw(t){['nid','bin','dob','tin','ph'].forEach(id=>{document.getElementById('pg-'+id).classList.toggle('on',id===t);document.getElementById('tab-'+id).classList.toggle('on',id===t);})}
+function sV(t,v){const i=document.getElementById(t+'-i');i.value=v.slice(0,t==='tin'?12:t==='bin'?9:17);if(t==='nid')oNID(i);else if(t==='bin')oBIN(i);else if(t==='tin')oTIN(i);}
+function sDOB(v){const i=document.getElementById('dob-i');i.value=v;oDOB(i);}
+function sPH(v){const i=document.getElementById('ph-i');i.value=v;oPH(i);}
+function luhn(n){let s=0,a=false;for(let i=n.length-1;i>=0;i--){let d=+n[i];if(a){d*=2;if(d>9)d-=9;}s+=d;a=!a;}return s%10===0;}
+function gz(m,d){for(const z of ZOD){if(m<z.e[0]||(m===z.e[0]&&d<=z.e[1]))return z.s;}return'Capricorn';}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+function copyC(c){navigator.clipboard.writeText(c).then(()=>toast('✓ Copied: '+c)).catch(()=>toast(c));}
+
+// ══ SHOW RESULT ══
+function showR(id,errs,buildOk,lbl){
+  const btn=document.getElementById(id+'-btn');
+  btn.textContent='Checking…';btn.classList.add('spinning');btn.disabled=true;
+  setTimeout(()=>{
+    btn.textContent=lbl;btn.classList.remove('spinning');btn.disabled=false;
+    const ok=errs.length===0;
+    const inp=document.getElementById(id+'-i');
+    if(inp&&id!=='dob'){inp.className='main-inp '+(ok?'valid':'invalid');}
+    const res=document.getElementById(id+'-res');
+    res.className='result show '+(ok?'vr':'ir');
+    res.innerHTML=ok?buildOk():`<span class="ricon">❌</span><div class="rtitle">Validation Failed</div><ul class="errlist">${errs.map(e=>`<li class="erritem">${e}</li>`).join('')}</ul>`;
+    if(id==='tin'&&!ok)document.getElementById('tin-pdf-btn').className='pdf-btn';
+    res.scrollIntoView({behavior:'smooth',block:'nearest'});
+  },600);
+}
+
+// ══ NID ══
+function oNID(el){let v=el.value.replace(/\D/g,'').slice(0,17);el.value=v;const L=v.length;const dc=document.getElementById('nid-dc');dc.textContent=`${L} digit${L!==1?'s':''}`;dc.className='dcount'+([10,13,17].includes(L)?' ok':'');const tb=document.getElementById('nid-tb');el.className='main-inp';tb.className='tbadge';if(L===17){tb.className='tbadge tg show';tb.textContent='🆕 Smart NID';}else if(L===13){tb.className='tbadge tgold show';tb.textContent='🗂️ Old NID';}else if(L===10){tb.className='tbadge tgold show';tb.textContent='📋 Voter ID';}document.getElementById('nid-btn').disabled=![10,13,17].includes(L);}
+function vNID(){const v=document.getElementById('nid-i').value,L=v.length,e=[];let info={};if(L===17)info=n17(v,e);else if(L===13)info=n13(v,e);else if(L===10)info=n10(v,e);else e.push('Must be 10, 13, or 17 digits');showR('nid',e,()=>bNID(v,L,info),'Verify NID →');}
+function n17(v,e){const yr=+v.slice(0,4),dc=v.slice(4,6),up=v.slice(6,8),bl=v.slice(8,10),sr=v.slice(10,16),ch=v.slice(16),cur=new Date().getFullYear();if(yr<1900||yr>cur-4)e.push(`Birth year "${yr}" is invalid (1900–${cur-4})`);const dn=DIST[dc];if(!dn)e.push(`District code "${dc}" is not recognized (valid: 01–64)`);if(v===v[0].repeat(17))e.push('Cannot be all same digits');return{type:'Smart NID (17-digit)',yr,dc,dn:dn||'Unknown District',up,bl,sr,ch,l:luhn(v),age:cur-yr};}
+function n13(v,e){const dc=v.slice(0,2),dn=DIST[dc];if(!dn)e.push(`District code "${dc}" invalid`);if(v===v[0].repeat(13))e.push('Cannot be all same digits');return{type:'Old NID (13-digit)',dc,dn:dn||'Unknown'};}
+function n10(v,e){if(v===v[0].repeat(10))e.push('Cannot be all same digits');return{type:'Voter ID (10-digit)'};}
+function bNID(v,L,info){const fmt=L===17?`${v.slice(0,4)}-${v.slice(4,6)}-${v.slice(6,8)}-${v.slice(8,10)}-${v.slice(10,16)}-${v.slice(16)}`:L===13?`${v.slice(0,2)}-${v.slice(2,6)}-${v.slice(6,10)}-${v.slice(10)}`:v;let h=`<span class="ricon">✅</span><div class="rtitle">Valid NID Format</div><div style="font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--green2);font-weight:700;letter-spacing:2px;margin-bottom:14px;word-break:break-all">${fmt}</div><div class="igrid"><div class="ibox"><div class="ilbl">Type</div><div class="ival g">${info.type}</div></div><div class="ibox"><div class="ilbl">Length</div><div class="ival g">${L} digits</div></div>`;if(L===17){h+=`<div class="ibox"><div class="ilbl">Birth Year</div><div class="ival">${info.yr}</div></div><div class="ibox"><div class="ilbl">Approx Age</div><div class="ival">${info.age} yrs</div></div><div class="ibox" style="grid-column:1/-1"><div class="ilbl">District — code ${info.dc}</div><div class="ival g">${info.dn}</div></div><div class="ibox"><div class="ilbl">Upazila</div><div class="ival">${info.up}</div></div><div class="ibox"><div class="ilbl">Serial</div><div class="ival">${info.sr}</div></div></div><div class="csrow"><span class="cslbl">Luhn Checksum</span><span class="csval ${info.l?'csok':'csfail'}">${info.l?'✓ Valid':'⚠ Failed'}</span></div>`;}else if(L===13){h+=`<div class="ibox" style="grid-column:1/-1"><div class="ilbl">District — code ${info.dc}</div><div class="ival g">${info.dn}</div></div></div>`;}else h+=`</div>`;return h+`<div class="disc">Format validated only · Official verification: <strong>nid.gov.bd</strong></div>`;}
+
+// ══ BIN ══
+function oBIN(el){let v=el.value.replace(/\D/g,'').slice(0,9);el.value=v;document.getElementById('bin-dc').textContent=`${v.length}/9 digits`;document.getElementById('bin-dc').className='dcount'+(v.length===9?' ok':'');const tb=document.getElementById('bin-tb');if(v.length===9){tb.className='tbadge tb show';tb.textContent='🏢 9-digit BIN';}else tb.className='tbadge';document.getElementById('bin-btn').disabled=v.length!==9;}
+function vBIN(){const v=document.getElementById('bin-i').value,e=[],p=v.slice(0,4),dn=BDIV[p];if(!dn)e.push(`Division prefix "${p}" invalid (valid: 0001–0008)`);if(v==='000000000')e.push('BIN cannot be all zeros');const info={p,dn:dn||'Unknown',s:v.slice(4),fmt:`${p}-${v.slice(4)}`};showR('bin',e,()=>`<span class="ricon">✅</span><div class="rtitle">Valid BIN Format</div><div style="font-family:'JetBrains Mono',monospace;font-size:20px;color:var(--blue);font-weight:700;letter-spacing:3px;margin-bottom:14px">${info.fmt}</div><div class="igrid"><div class="ibox"><div class="ilbl">Type</div><div class="ival b">Business ID</div></div><div class="ibox"><div class="ilbl">Length</div><div class="ival b">9 digits</div></div><div class="ibox" style="grid-column:1/-1"><div class="ilbl">Division — prefix ${info.p}</div><div class="ival b">${info.dn} Division</div></div><div class="ibox" style="grid-column:1/-1"><div class="ilbl">Serial</div><div class="ival">${info.s}</div></div></div><div class="disc">Format only · Official: <strong>nbr.gov.bd</strong></div>`,'Verify BIN →');}
+
+// ══ DOB ══
+function oDOB(el){const tb=document.getElementById('dob-tb');if(el.value){tb.className='tbadge tb show';tb.textContent='📅 Date selected';}else tb.className='tbadge';document.getElementById('dob-btn').disabled=!el.value;}
+function vDOB(){const v=document.getElementById('dob-i').value;if(!v)return;const dob=new Date(v),tod=new Date(),e=[];if(dob>tod)e.push('Date of birth cannot be in the future');const yr=dob.getFullYear();if(yr<1900)e.push(`Year ${yr} is before 1900`);const ay=Math.floor((tod-dob)/(365.25*24*3600*1e3));if(ay<4&&!e.length)e.push('Age must be at least 4 years');const mo=dob.getMonth()+1,dy=dob.getDate();const MF=['','January','February','March','April','May','June','July','August','September','October','November','December'];const DA=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];const zod=gz(mo,dy);const mk=String(mo).padStart(2,'0')+'-'+String(dy).padStart(2,'0');const sp=BSP[mk]||null;let nb=new Date(tod.getFullYear(),dob.getMonth(),dob.getDate());if(nb<=tod)nb=new Date(tod.getFullYear()+1,dob.getMonth(),dob.getDate());const du=Math.ceil((nb-tod)/(24*3600*1e3));let ag='';if(ay<13)ag='Child 👶';else if(ay<18)ag='Teenager 🧒';else if(ay<30)ag='Young Adult 🧑';else if(ay<60)ag='Adult 👨';else ag='Senior 👴';
+showR('dob',e,()=>{let h=`<span class="ricon">🎂</span><div class="rtitle">Valid Date of Birth</div><div style="font-size:19px;font-weight:700;color:var(--gold);margin-bottom:14px;font-family:'Syne',sans-serif">${dy} ${MF[mo]} ${yr}</div>`;if(sp)h+=`<div style="background:rgba(244,42,65,.12);border:1px solid rgba(244,42,65,.22);border-radius:10px;padding:9px 12px;margin-bottom:12px;font-size:12px;color:rgba(255,120,120,.9);font-weight:600">${sp}</div>`;h+=`<div class="igrid"><div class="ibox"><div class="ilbl">Day of week</div><div class="ival gold">${DA[dob.getDay()]}</div></div><div class="ibox"><div class="ilbl">Age</div><div class="ival gold">${ay} years</div></div><div class="ibox"><div class="ilbl">Life Stage</div><div class="ival">${ag}</div></div><div class="ibox"><div class="ilbl">Zodiac Sign</div><div class="ival">${zod}</div></div><div class="ibox"><div class="ilbl">Birthday in</div><div class="ival gold">${du} days 🎂</div></div><div class="ibox"><div class="ilbl">NID Eligible</div><div class="ival ${ay>=18?'g':'r'}">${ay>=18?'✓ Yes (18+)':'✗ Not yet'}</div></div></div>`;return h;},'Verify DOB →');}
+
+// ══ TIN ══
+function oTIN(el){let v=el.value.replace(/\D/g,'').slice(0,12);el.value=v;document.getElementById('tin-dc').textContent=`${v.length}/12 digits`;document.getElementById('tin-dc').className='dcount'+(v.length===12?' ok':'');const tb=document.getElementById('tin-tb');if(v.length===12){tb.className='tbadge tp show';tb.textContent='💳 12-digit TIN';}else tb.className='tbadge';document.getElementById('tin-btn').disabled=v.length!==12;}
+function vTIN(){const v=document.getElementById('tin-i').value,e=[];if(v.length!==12)e.push('TIN must be exactly 12 digits');if(v===v[0].repeat(12))e.push('Cannot be all same digits');if(v==='000000000000')e.push('Cannot be all zeros');const c=v.slice(0,3),g=v.slice(3,5),s=v.slice(5,11),ch=v.slice(11),l=luhn(v),info={c,g,s,ch,l,fmt:`${v.slice(0,4)}-${v.slice(4,8)}-${v.slice(8,12)}`};if(!e.length){lTIN=v;lTINI=info;}
+showR('tin',e,()=>{document.getElementById('tin-pdf-btn').className='pdf-btn show';return`<span class="ricon">✅</span><div class="rtitle">Valid TIN Format</div><div style="font-family:'JetBrains Mono',monospace;font-size:20px;color:var(--purple);font-weight:700;letter-spacing:3px;margin-bottom:14px">${info.fmt}</div><div class="igrid"><div class="ibox"><div class="ilbl">Type</div><div class="ival p">Tax ID Number</div></div><div class="ibox"><div class="ilbl">Length</div><div class="ival p">12 digits</div></div><div class="ibox"><div class="ilbl">Tax Circle</div><div class="ival">${info.c}</div></div><div class="ibox"><div class="ilbl">Group Code</div><div class="ival">${info.g}</div></div><div class="ibox"><div class="ilbl">Serial No</div><div class="ival">${info.s}</div></div><div class="ibox"><div class="ilbl">Check Digit</div><div class="ival">${info.ch}</div></div></div><div class="csrow"><span class="cslbl">Luhn Checksum</span><span class="csval ${info.l?'csok':'csfail'}">${info.l?'✓ Valid':'⚠ Failed'}</span></div><div class="disc">Format only · Official: <strong>secure.incometax.gov.bd</strong></div>`;},'Verify TIN →');}
+
+function genPDF(){const tin=lTIN||'000000000000';const nm=document.getElementById('tin-name').value.trim()||'[Your Name]';const ad=document.getElementById('tin-addr').value.trim()||'[Your Address]';const fmt=`${tin.slice(0,4)}-${tin.slice(4,8)}-${tin.slice(8,12)}`;const td=new Date().toLocaleDateString('en-BD',{day:'2-digit',month:'long',year:'numeric'});document.getElementById('tin-cert-html').innerHTML=`<div class="tc-top"><div style="font-size:12px;font-weight:800">🇧🇩 GOVERNMENT OF BANGLADESH</div><div style="font-size:8px;opacity:.8;margin-top:1px">National Board of Revenue (NBR)</div></div><div style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#555;margin-bottom:8px">Tax Identification Number Certificate</div><div class="tc-num">${fmt}</div><div class="tc-f"><span class="tc-fl">Name</span><span class="tc-fv">${nm}</span></div><div class="tc-f"><span class="tc-fl">Address</span><span class="tc-fv">${ad}</span></div><div class="tc-f"><span class="tc-fl">Issue Date</span><span class="tc-fv">${td}</span></div><div class="tc-f"><span class="tc-fl">Circle</span><span class="tc-fv">${lTINI.c||'N/A'}</span></div><div class="tc-f"><span class="tc-fl">Status</span><span class="tc-fv" style="color:#00c853">● ACTIVE</span></div><div class="tc-bot">⚠️ SAMPLE ONLY — Official: secure.incometax.gov.bd</div>`;document.getElementById('tin-prev').className='tin-prev-wrap show';
+const pw=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>TIN ${fmt}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;padding:20px;background:#fff}.page{max-width:600px;margin:0 auto;border:3px solid #006a4e;border-radius:8px;overflow:hidden}.top{background:#006a4e;color:#fff;padding:16px;text-align:center}.rb{height:5px;background:#f42a41}.body{padding:20px}.ct{text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;color:#555;margin-bottom:14px}.tb2{border:2px solid #006a4e;border-radius:7px;padding:12px;text-align:center;background:#f0fff4;margin-bottom:14px}.tl{font-size:9px;color:#888;text-transform:uppercase;margin-bottom:4px}.tn{font-size:26px;font-weight:700;color:#006a4e;letter-spacing:4px;font-family:'Courier New',monospace}table{width:100%;border-collapse:collapse;margin-bottom:14px}tr{border-bottom:1px solid #eee}td{padding:8px 3px;font-size:12px}td:first-child{color:#888;font-size:9px;text-transform:uppercase;width:35%}td:last-child{font-weight:700}.bot{background:#006a4e;color:#fff;padding:8px;text-align:center;font-size:8px}.rb2{height:2px;background:#f42a41}.wm{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);font-size:70px;font-weight:900;color:rgba(0,106,78,.05);pointer-events:none;z-index:0;white-space:nowrap}.nt{background:#fff3cd;border:1px solid #ffc107;border-radius:5px;padding:7px 10px;font-size:9px;color:#856404;margin-bottom:10px}@media print{body{padding:0}.page{border-radius:0}}</style></head><body><div class="wm">SAMPLE</div><div class="page"><div class="top"><h1 style="font-size:12px;margin-bottom:2px">🇧🇩 GOVERNMENT OF THE PEOPLE'S REPUBLIC OF BANGLADESH</h1><p style="font-size:9px;opacity:.8">National Board of Revenue (NBR)</p></div><div class="rb"></div><div class="body"><div class="nt">⚠️ Format demonstration only. Official TIN: <strong>secure.incometax.gov.bd</strong></div><div class="ct">Tax Identification Number (TIN) Certificate</div><div class="tb2"><div class="tl">TIN Number</div><div class="tn">${fmt}</div></div><table><tr><td>Name</td><td>${nm}</td></tr><tr><td>Address</td><td>${ad}</td></tr><tr><td>Issue Date</td><td>${td}</td></tr><tr><td>Circle Code</td><td>${lTINI.c||'N/A'}</td></tr><tr><td>Group Code</td><td>${lTINI.g||'N/A'}</td></tr><tr><td>Status</td><td style="color:#00c853;font-weight:800">● ACTIVE</td></tr><tr><td>Authority</td><td>National Board of Revenue, Bangladesh</td></tr></table></div><div class="rb2"></div><div class="bot">TIN: ${fmt} | ${new Date().toLocaleString()} | SAMPLE ONLY</div></div><script>window.onload=()=>window.print()<\/script></body></html>`;
+const w=window.open('','_blank','width=700,height=900');w.document.write(pw);w.document.close();}
+
+// ══ PHONE ══
+function parsePH(raw){let v=raw.replace(/[\s\-\(\)]/g,'');if(v.startsWith('+880'))v='0'+v.slice(4);else if(v.startsWith('880')&&v.length===13)v='0'+v.slice(3);return v;}
+function getOp(v){return PMAP[v.slice(0,3)]||null;}
+
+function oPH(el){
+  el.value=el.value.replace(/[^\d+]/g,'');
+  const raw=el.value,v=parsePH(raw),L=v.length;
+  const dc=document.getElementById('ph-dc');dc.textContent=`${v.replace(/\D/g,'').length} digits`;dc.className='dcount'+(L===11?' ok':'');
+  const tb=document.getElementById('ph-tb');
+  const live=document.getElementById('op-live');
+  tb.className='tbadge';live.className='op-live';
+  document.getElementById('ph-btn').disabled=true;
+  if(L>=3){
+    const ok=getOp(v);
+    if(ok){
+      const op=OPS[ok];
+      tb.className='tbadge tt show';tb.textContent=`📱 ${op.name}`;
+      live.className=`op-live show ${op.bg}`;
+      live.innerHTML=`<div class="op-live-inner">
+        ${SVGS[ok]}
+        <div>
+          <div class="op-live-name" style="color:${op.color}">${op.name}</div>
+          <div class="op-live-tag">${op.tagline}</div>
+          <div class="op-live-prefixes">${op.prefixes.map(p=>`<span class="op-prefix-chip">${p}X</span>`).join('')}</div>
+        </div>
+      </div>`;
+    } else {
+      tb.className='tbadge to show';tb.textContent='⚠️ Unknown prefix';
+      live.className='op-live';
+    }
+  }
+  if(L===11&&/^\d{11}$/.test(v))document.getElementById('ph-btn').disabled=false;
+}
+
+function vPH(){
+  const raw=document.getElementById('ph-i').value,v=parsePH(raw),e=[];
+  if(!/^\d+$/.test(v))e.push('Only digits allowed (except leading +)');
+  if(v.length!==11)e.push(`Must be 11 digits (got ${v.length})`);
+  if(v[0]!=='0'||v[1]!=='1')e.push('Must start with 01');
+  const ok=v.length>=3?getOp(v):null;
+  if(!ok&&!e.length)e.push(`Prefix "${v.slice(0,3)}" is not a valid BD operator prefix`);
+  showR('ph',e,()=>{
+    const op=OPS[ok];curOp=ok;
+    const card=document.getElementById('op-detail');
+    card.style.display='block';
+    document.getElementById('op-detail-title').innerHTML=`${SVGS[ok]}<span style="margin-left:10px;vertical-align:middle">${op.name} — USSD Codes</span>`;
+    document.getElementById('op-detail').style.setProperty('--op-color',op.color);
+    setPP('pre');
+    setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'nearest'}),400);
+    const fmt=v.slice(0,4)+'-'+v.slice(4,7)+'-'+v.slice(7,11);
+    return`<span class="ricon">✅</span><div class="rtitle">Valid BD Number</div>
+      <div style="display:flex;align-items:center;gap:13px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px 16px;margin-bottom:14px">
+        ${SVGS[ok]}
+        <div><div style="font-size:18px;font-weight:700;color:${op.color};letter-spacing:-.2px;font-family:'Syne',sans-serif">${op.name}</div><div style="font-size:11px;color:var(--sub);margin-top:3px">${op.tagline}</div></div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:20px;color:var(--teal);font-weight:700;letter-spacing:2.5px;margin-bottom:14px">${fmt}</div>
+      <div class="igrid">
+        <div class="ibox"><div class="ilbl">Prefix</div><div class="ival t">${v.slice(0,3)}</div></div>
+        <div class="ibox"><div class="ilbl">Intl Format</div><div class="ival">+880${v.slice(1)}</div></div>
+        <div class="ibox" style="grid-column:1/-1"><div class="ilbl">Customer Care (Free Call)</div><div class="ival t">${op.care}</div></div>
+        <div class="ibox" style="grid-column:1/-1"><div class="ilbl">Website</div><div class="ival">${op.web}</div></div>
+      </div>
+      <div class="disc">⬇️ Scroll down for USSD codes &amp; Prepaid/Postpaid</div>`;
+  },'Identify Operator →');
+}
+
+function setPP(t){
+  curPP=t;
+  document.getElementById('pp-pre').classList.toggle('on',t==='pre');
+  document.getElementById('pp-post').classList.toggle('on',t==='post');
+  rUSSD();
+}
+
+function rUSSD(){
+  if(!curOp)return;
+  const op=OPS[curOp],d=curPP==='pre'?op.prepaid:op.postpaid;
+  document.getElementById('ussd-area').innerHTML=`
+    <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:9px;display:flex;align-items:center;gap:6px"><span style="width:3px;height:12px;background:var(--teal);border-radius:2px;display:inline-block"></span>${curPP==='pre'?'Prepaid':'Postpaid'} USSD Codes — tap to copy</div>
+    <table class="ussd-tbl">
+      <thead><tr><th>Service</th><th>Code</th></tr></thead>
+      <tbody>${d.extra.map(r=>`<tr><td>${r.l}</td><td><span class="ussd-code" onclick="copyC('${r.c}')">${r.c}</span></td></tr>`).join('')}</tbody>
+    </table>`;
+  document.getElementById('care-area').innerHTML=`
+    <div class="info-strip">
+      <div class="info-strip-item"><div class="is-lbl">Customer Care</div><div class="is-val">${op.care}</div></div>
+      <div class="info-strip-item"><div class="is-lbl">Plan Type</div><div class="is-val" style="color:${curPP==='pre'?'var(--green2)':'var(--blue)'}">● ${curPP==='pre'?'Prepaid':'Postpaid'}</div></div>
+    </div>
+    <div class="disc" style="margin-top:8px">Codes may change. For latest visit <strong style="color:var(--teal)">${op.web}</strong></div>`;
+}
+</script>
+</body>
+</html>
